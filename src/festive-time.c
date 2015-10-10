@@ -13,7 +13,8 @@ static TextLayer *s_time_layer, *s_date_layer, *s_weekday_layer, *s_weather_laye
 
 static bool twenty_four_hour_format = false;
 static bool battery_on_off = false;
-static char* temperature_format = "";
+static char* temperature_format = "Fahrenheit";
+static int initTemp = 0;
 
 // Battery
 static Layer *s_battery_layer;
@@ -153,7 +154,7 @@ static void update_time(){
     static char date_buffer[] = "DDD, MMM DD";
 
     // Write the current hours and minutes into the buffer
-    if(clock_is_24h_style() == twenty_four_hour_format){
+    if(twenty_four_hour_format){
         // Use 24 hour format
         strftime(buffer, sizeof("00:00"), "%k:%M", tick_time);
     } else {
@@ -192,6 +193,25 @@ static void update_image(){
     }
 }
 
+static void update_temperature(char* temp_format){
+    static char temperature_buffer[8];
+	int temperature = 0;
+
+	if(temp_format[0] == 'F'){
+		temperature = initTemp;
+		snprintf(temperature_buffer, sizeof(temperature_buffer), "%d°F", temperature);
+	}else if(temp_format[0] == 'C'){
+		temperature = (initTemp - 32) * 5 / 9;
+		snprintf(temperature_buffer, sizeof(temperature_buffer), "%d°C", temperature);
+	}else{
+		temperature = (int)((double)initTemp + 459.67) * 5 / 9;
+		snprintf(temperature_buffer, sizeof(temperature_buffer), "%d K", temperature);
+	}
+
+    text_layer_set_text(s_weather_layer, temperature_buffer);
+    layer_mark_dirty(text_layer_get_layer(s_weather_layer));
+}
+
 /** Updates time logic **/
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed){
     if( (units_changed & MINUTE_UNIT) != 0){
@@ -208,6 +228,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed){
 
             // Send the message!
             app_message_outbox_send();
+			update_temperature(temperature_format);
         }
     }
     
@@ -289,9 +310,11 @@ static void window_load(Window *window) {
 		layer_set_hidden(s_battery_layer, !battery_on_off);
 	}
 
-	/*if(persist_read_string(KEY_TEMP_TYPE)){
-		temperature_format = persist_read_string(KEY_TEMP_TYPE);
-	}*/
+	if(persist_read_string(KEY_TEMP_TYPE, temperature_format, sizeof("Fahrenheit"))){
+		persist_read_string(KEY_TEMP_TYPE, temperature_format, sizeof("Fahrenheit"));
+
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Temp style: %s", temperature_format);
+	}
 }
 
 /** Free up the memory on delete **/
@@ -310,18 +333,17 @@ static void window_unload(Window *window) {
 
 /** JS AppMessages **/
 static void inbox_received_callback(DictionaryIterator *iterator, void *context){
-    static char temperature_buffer[8];
 
 	// Read first item
     Tuple *t = dict_read_first(iterator);
     
     // For all items
     while(t != NULL) {
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "Received callback: %i", (int)t->key);
         switch(t->key){
             case KEY_TEMPERATURE:
-                snprintf(temperature_buffer, sizeof(temperature_buffer), "%d°F", (int)t->value->int32);
-                break;
+                initTemp = (int)t->value->int32;
+				update_temperature(temperature_format);
+                break;			
 			case KEY_TWENTY_FOUR_HOUR_FORMAT:
 				twenty_four_hour_format = (bool)t->value->int8;
 				persist_write_int(KEY_TWENTY_FOUR_HOUR_FORMAT, twenty_four_hour_format);
@@ -335,6 +357,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 			case KEY_TEMP_TYPE:
 				strcpy(temperature_format, (char*)t->value);
 				persist_write_string(KEY_TEMP_TYPE, temperature_format);
+				update_temperature(temperature_format);
 				break;
             default:
                 APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key);
@@ -342,8 +365,6 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         }
         t = dict_read_next(iterator);
     }
-    
-    text_layer_set_text(s_weather_layer, temperature_buffer);
 }
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {

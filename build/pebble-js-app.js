@@ -72,7 +72,7 @@ Pebble.addEventListener('appmessage',
 );
 
 Pebble.addEventListener('showConfiguration', function(){
-	var url = 'https://9f45881a.ngrok.io';
+	var url = 'http://blackjack26.github.io/FestiveTimeWebpage';
 	console.log("Showing configuration page: " + url);
 	Pebble.openURL(url);
 });
