@@ -1,0 +1,32 @@
+# project  configured on Fri Oct  9 23:03:09 2015 by
+# waf 1.7.11 (abi 98, python 20706f0 on linux2)
+# using /home/jack/Documents/pebble-dev/PebbleSDK-3.4/Pebble/waf configure
+#
+----------------------------------------
+Setting top to
+/home/jack/Documents/pebble-dev/FestiveTime
+----------------------------------------
+Setting out to
+/home/jack/Documents/pebble-dev/FestiveTime/build
+----------------------------------------
+Found Pebble SDK for basalt in:
+/home/jack/Documents/pebble-dev/PebbleSDK-3.4/Pebble/basalt
+----------------------------------------
+Checking for program gcc,cc
+arm-none-eabi-gcc
+find program=['gcc', 'cc'] paths='' var='CC' -> 'arm-none-eabi-gcc'
+----------------------------------------
+Checking for program ar
+arm-none-eabi-ar
+find program=['ar'] paths='' var='AR' -> 'arm-none-eabi-ar'
+----------------------------------------
+Found Pebble SDK for aplite in:
+/home/jack/Documents/pebble-dev/PebbleSDK-3.4/Pebble/aplite
+----------------------------------------
+Checking for program gcc,cc
+arm-none-eabi-gcc
+find program=['gcc', 'cc'] paths='' var='CC' -> 'arm-none-eabi-gcc'
+----------------------------------------
+Checking for program ar
+arm-none-eabi-ar
+find program=['ar'] paths='' var='AR' -> 'arm-none-eabi-ar'

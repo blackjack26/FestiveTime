@@ -1,0 +1,91 @@
+{
+    "appKeys": {
+        "KEY_TEMPERATURE": 0,
+		"twentyFourHourFormat": 1,
+		"batteryDisplayOnOff": 2,
+		"temperatureFormat": 3
+    },
+    "capabilities": [
+        "location",
+        "configurable"
+    ],
+    "companyName": "Chaos Alpha",
+    "longName": "Festive Time",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/12-25.png",
+                "name": "IMAGE_12_25",
+                "type": "pbi"
+            },
+            {
+                "file": "images/menuIcon.png",
+                "menuIcon": true,
+                "name": "IMAGE_MENU",
+                "type": "pbi"
+            },
+            {
+                "file": "images/done-512.png",
+                "name": "IMAGE_FRIDAY",
+                "type": "pbi"
+            },
+            {
+                "file": "images/festive-time.png",
+                "name": "IMAGE_DONT_USE",
+                "type": "png"
+            },
+            {
+                "file": "images/Easter.png",
+                "name": "IMAGE_RABBIT",
+                "type": "pbi"
+            },
+            {
+                "file": "images/November.png",
+                "name": "IMAGE_TURKEY",
+                "type": "pbi"
+            },
+            {
+                "file": "images/bt-icon.png",
+                "name": "IMAGE_BT_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/catholic_church-512.png",
+                "name": "IMAGE_SUNDAY",
+                "type": "pbi"
+            },
+            {
+                "file": "images/normal.png",
+                "name": "IMAGE_DEFAULT",
+                "type": "pbi"
+            },
+            {
+                "file": "images/10-31.png",
+                "name": "IMAGE_10_31",
+                "type": "pbi"
+            },
+            {
+                "file": "images/Birthday.png",
+                "name": "IMAGE_BIRTHDAY",
+                "type": "pbi"
+            },
+            {
+                "file": "images/camel.png",
+                "name": "IMAGE_CAMEL",
+                "type": "pbi"
+            }
+        ]
+    },
+    "sdkVersion": "3",
+    "shortName": "Festive Time",
+    "targetPlatforms": [
+        "aplite",
+        "basalt"
+    ],
+    "uuid": "e3de711d-0172-458a-b8aa-13814caed2f2",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": true
+    }
+}
