@@ -85,7 +85,8 @@ Pebble.addEventListener('webviewclosed', function(e) {
 		Pebble.sendAppMessage({
 			twentyFourHourFormat: configData.twentyFourHourFormat,
 			batteryDisplayOnOff: configData.batteryDisplayOnOff,
-			temperatureFormat: configData.temperatureFormat
+			temperatureFormat: configData.temperatureFormat,
+			birthdayList: configData.birthdayList
 		}, function(){
 			console.log('Send config successful!');
 		}, function(){

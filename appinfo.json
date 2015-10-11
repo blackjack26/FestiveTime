@@ -3,7 +3,8 @@
         "KEY_TEMPERATURE": 0,
 		"twentyFourHourFormat": 1,
 		"batteryDisplayOnOff": 2,
-		"temperatureFormat": 3
+		"temperatureFormat": 3,
+		"birthdayList": 4
     },
     "capabilities": [
         "location",

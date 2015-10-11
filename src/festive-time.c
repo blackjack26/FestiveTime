@@ -7,6 +7,15 @@
 #define KEY_TWENTY_FOUR_HOUR_FORMAT 1
 #define KEY_BATTERY_ON_OFF 2
 #define KEY_TEMP_TYPE 3
+#define KEY_BIRTHDAY_LIST 4
+
+#define KEY_BDAY_LIST_SIZE 20
+
+typedef struct
+{
+	char date[5];
+	char name[10];
+} Birthday;
     
 static Window *window;
 static TextLayer *s_time_layer, *s_date_layer, *s_weekday_layer, *s_weather_layer;
@@ -14,7 +23,9 @@ static TextLayer *s_time_layer, *s_date_layer, *s_weekday_layer, *s_weather_laye
 static bool twenty_four_hour_format = false;
 static bool battery_on_off = false;
 static char* temperature_format = "Fahrenheit";
-static int initTemp = 0;
+static char* birthday_list = "";
+static int birthday_list_size = 0;
+static int initTemp = 5000;
 
 // Battery
 static Layer *s_battery_layer;
@@ -30,8 +41,7 @@ static BitmapLayer *s_background_layer;
 static GBitmap *s_background_bitmap;
 
 // Birthday
-char* birthday_day[4] = { "10-09", "08-15", "11-06", "12-06" };
-char* birthday_name[4] = { "Robert", "Samantha", "Mom", "Dad" };
+static Birthday birthdays[10];
 
 /** Update bluetooth logic **/
 static void bluetooth_callback(bool connected){
@@ -95,27 +105,40 @@ static uint16_t normalWeekday(int weekday){
 	return 0;
 }
 
+static int countChar(char* string, char delim){
+	int charCount = 0;
+	for(int i = 0; i < (int)strlen(string); i++){
+		if(string[i] == delim)
+			charCount++;
+	}
+	return charCount + 1;
+}
+
 /** Get background resource for special days **/
 static uint16_t get_background_resource(int month, int day, int weekday){
 
-    // Check for birthdays
-    for(int i = 0; i < 4; i++){
-        int bday_month_tens = ((birthday_day[i])[0] - '0')*10; 
-        int bday_month_ones = ((birthday_day[i])[1] - '0');
-        int bday_month = bday_month_tens + bday_month_ones;
-        
-        int bday_day_tens = ((birthday_day[i])[3] - '0')*10;
-        int bday_day_ones = ((birthday_day[i])[4] - '0');
-        int bday_day = bday_day_tens + bday_day_ones;
-        
-        if(bday_month == month && bday_day == day){
-            char* bdaystr = birthday_name[i];
-            strcat(bdaystr, "'s Birthday!");
-            text_layer_set_text(s_weekday_layer, bdaystr);
-            return RESOURCE_ID_IMAGE_BIRTHDAY;
-        }
-    }
-    
+	// Check for birthdays
+	for(int i = 0; i < 4; i++){
+		if(birthdays[i].name == NULL)
+			continue;
+
+	    int bday_month_tens = ((birthdays[i].date)[0] - '0')*10; 
+	    int bday_month_ones = ((birthdays[i].date)[1] - '0');
+	    int bday_month = bday_month_tens + bday_month_ones;
+	    
+	    int bday_day_tens = ((birthdays[i].date)[3] - '0')*10;
+	    int bday_day_ones = ((birthdays[i].date)[4] - '0');
+	    int bday_day = bday_day_tens + bday_day_ones;
+
+	    if(bday_month == month && bday_day == day){
+	        char* bdaystr = "";
+			strcpy(bdaystr, (char*)birthdays[i].name);
+	        strcat(bdaystr, "'s Birthday!");
+	        text_layer_set_text(s_weekday_layer, bdaystr);
+	        return RESOURCE_ID_IMAGE_BIRTHDAY;
+	    }
+	}
+
     switch(month){
         case 4:
             return RESOURCE_ID_IMAGE_RABBIT;
@@ -170,6 +193,7 @@ static void update_time(){
 
 /** Renders the background image **/
 static void update_image(){
+
     // Get a tm structure
     time_t temp = time(NULL);
     struct tm *tick_time = localtime(&temp);
@@ -188,14 +212,57 @@ static void update_image(){
     s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID);
     bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
     if(s_background_bitmap == NULL){
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Image Error: %i", RESOURCE_ID);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Image Missing: [%i]", RESOURCE_ID);
         text_layer_set_text(s_weekday_layer, "Booooo, no image");
     }
+
+	if(text_layer_get_text(s_weekday_layer) == NULL)
+		text_layer_set_background_color(s_weekday_layer, GColorClear);
+	else
+		text_layer_set_background_color(s_weekday_layer, GColorBlack);
+}
+
+static void parse_birthday_list(char* list){
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "The birthday list is: %s", list);
+	char* temp = list;
+	if(temp != NULL){
+		int listSize = countChar(list, ',');
+		if(listSize%2 != 0) 
+			return;
+
+		int index = 0;
+		for(int i = 0; i < listSize && i < 8; i+=2){
+			char* src = temp;		
+		
+			// Name
+			int nameSize = strcspn(src, ",");
+			char name[10];		
+			memset(name, '\0', sizeof(name));
+			strncpy(name, src, nameSize);
+	
+			// Date
+			int dateSize = strcspn(src + nameSize + 1, ",");
+			char date[5];
+			memset(date, '\0', sizeof(date));
+			strncpy(date, src + nameSize + 1, dateSize);
+
+			strncpy(birthdays[index].name, name, sizeof(birthdays[index].name));
+
+			strncpy(birthdays[index].date, date, sizeof(birthdays[index].date));
+
+			strncpy(temp, temp + nameSize + dateSize + 2, strlen(temp));
+
+			index++;
+		}
+	}
+	update_image();
 }
 
 static void update_temperature(char* temp_format){
     static char temperature_buffer[8];
 	int temperature = 0;
+
+	printf(temp_format);
 
 	if(temp_format[0] == 'F'){
 		temperature = initTemp;
@@ -208,7 +275,10 @@ static void update_temperature(char* temp_format){
 		snprintf(temperature_buffer, sizeof(temperature_buffer), "%d K", temperature);
 	}
 
-    text_layer_set_text(s_weather_layer, temperature_buffer);
+	if(initTemp == 5000)
+    	text_layer_set_text(s_weather_layer, "...");
+	else	
+	    text_layer_set_text(s_weather_layer, temperature_buffer);
     layer_mark_dirty(text_layer_get_layer(s_weather_layer));
 }
 
@@ -290,6 +360,7 @@ static void window_load(Window *window) {
     text_layer_set_text_color(s_weather_layer, GColorWhite);
     text_layer_set_text_alignment(s_weather_layer, GTextAlignmentCenter);
     text_layer_set_font(s_weather_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+	text_layer_set_text(s_weather_layer, "...");
 
     // Add layers to window
     layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
@@ -300,20 +371,35 @@ static void window_load(Window *window) {
     layer_add_child(window_layer, bitmap_layer_get_layer(s_bt_icon_layer));
     layer_add_child(window_layer, text_layer_get_layer(s_weather_layer));
 
-	if(persist_read_bool(KEY_TWENTY_FOUR_HOUR_FORMAT)){
+	if(persist_exists(KEY_TWENTY_FOUR_HOUR_FORMAT)){
 		twenty_four_hour_format = persist_read_bool(KEY_TWENTY_FOUR_HOUR_FORMAT);
 		update_time();
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Time: [%s]", (twenty_four_hour_format) ? "24 hours" : "12 hours");	
 	}
 
-	if(persist_read_bool(KEY_BATTERY_ON_OFF)){
+	if(persist_exists(KEY_BATTERY_ON_OFF)){
 		battery_on_off = persist_read_bool(KEY_BATTERY_ON_OFF);
 		layer_set_hidden(s_battery_layer, !battery_on_off);
+
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Battery: [%s]", (battery_on_off) ? "On" : "Off");	
 	}
 
-	if(persist_read_string(KEY_TEMP_TYPE, temperature_format, sizeof("Fahrenheit"))){
+	if(persist_exists(KEY_TEMP_TYPE)){
 		persist_read_string(KEY_TEMP_TYPE, temperature_format, sizeof("Fahrenheit"));
+		update_temperature(temperature_format);
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Temp style: [%s]", temperature_format);
+	}
 
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "Temp style: %s", temperature_format);
+	if(persist_exists(KEY_BDAY_LIST_SIZE)){
+		birthday_list_size = persist_read_int(KEY_BDAY_LIST_SIZE);
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Bday List Size: [%i]", birthday_list_size);
+	}
+
+	if(persist_exists(KEY_BIRTHDAY_LIST)){
+		persist_read_string(KEY_BIRTHDAY_LIST, birthday_list, birthday_list_size);
+		update_time();
+		parse_birthday_list(birthday_list);
+		printf("Pre-name: %s", birthdays[1].name);
 	}
 }
 
@@ -359,6 +445,14 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 				persist_write_string(KEY_TEMP_TYPE, temperature_format);
 				update_temperature(temperature_format);
 				break;
+			case KEY_BIRTHDAY_LIST:
+			{
+				strcpy(birthday_list, (char*)t->value);
+				persist_write_string(KEY_BIRTHDAY_LIST, birthday_list);
+				persist_write_int(KEY_BDAY_LIST_SIZE, strlen((char*)t->value)+1);
+				parse_birthday_list(birthday_list); 
+				break;
+			}
             default:
                 APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key);
                 break;
@@ -411,7 +505,8 @@ static void init() {
 }
 
 static void deinit() {
-  window_destroy(window);
+	window_destroy(window);
+	
 }
 
 int main(void) {
