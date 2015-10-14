@@ -112,7 +112,7 @@ static uint16_t normalWeekday(int weekday){
 		case 3: return RESOURCE_ID_IMAGE_CAMEL;
         case 4: return RESOURCE_ID_IMAGE_THURSDAY;
 		case 5: return RESOURCE_ID_IMAGE_FRIDAY;
-        case 6: text_layer_set_text(s_weekday_layer, "Saturday"); break;
+        case 6: text_layer_set_text(s_weekday_layer, "Saturday Image"); break;
 		default: break;		
 	}
 	return 0;

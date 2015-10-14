@@ -3,3 +3,6 @@
 
 # no build/ files
 build/
+
+# no .lock-waf_linux2_build file
+.lock-wav_linux2_build
