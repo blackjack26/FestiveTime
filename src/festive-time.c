@@ -8,6 +8,7 @@
 #define KEY_BATTERY_ON_OFF 2
 #define KEY_TEMP_TYPE 3
 #define KEY_BIRTHDAY_LIST 4
+#define KEY_INVERT_COLOR 5
 
 #define KEY_BDAY_LIST_SIZE 20
 
@@ -17,15 +18,26 @@ typedef struct
 	char name[10];
 } Birthday;
     
+enum Colors{
+	BLACK,
+	WHITE
+};
+
 static Window *window;
 static TextLayer *s_time_layer, *s_date_layer, *s_weekday_layer, *s_weather_layer;
 
 static bool twenty_four_hour_format = false;
 static bool battery_on_off = false;
+
 static char* temperature_format = "Fahrenheit";
-static char* birthday_list = "";
-static int birthday_list_size = 0;
 static int initTemp = 5000;
+
+static char birthday_list[(sizeof(Birthday)+1)*10];
+static int birthday_list_size = 0;
+
+static int background_color = BLACK;
+static int foreground_color = WHITE;
+static bool is_inverted = false;
 
 // Battery
 static Layer *s_battery_layer;
@@ -62,22 +74,23 @@ static void battery_update_proc(Layer *layer, GContext *ctx){
     int width = (int)(float)(((float)s_battery_level / 100.0F) * 123.0F);
     
     // Draw the background
-    graphics_context_set_fill_color(ctx, GColorBlack);
+    graphics_context_set_fill_color(ctx, background_color ? GColorWhite : GColorBlack);
     graphics_fill_rect(ctx, bounds, 0, GCornerNone);
     
-    // Draw the bar
-    graphics_context_set_fill_color(ctx, GColorWhite);
-    graphics_fill_rect(ctx, GRect((123 - width) / 2, 0, width, 3), 0, GCornerNone);
-    
+    // Draw the bar	
+	if(battery_on_off){
+		graphics_context_set_fill_color(ctx, foreground_color ? GColorWhite : GColorBlack);
+		graphics_fill_rect(ctx, GRect((123 - width) / 2, 0, width, 3), 0, GCornerNone);
+    }
     // Draw the static bars
-    graphics_context_set_fill_color(ctx, GColorWhite);
+    graphics_context_set_fill_color(ctx, foreground_color ? GColorWhite : GColorBlack);
     graphics_fill_rect(ctx, GRect(0, 1, 123, 1), 0, GCornerNone);
 }
 
 /** Render divider **/
 static void divider_update_proc(Layer *layer, GContext *ctx){
     GRect bounds = layer_get_bounds(layer);
-    graphics_context_set_fill_color(ctx, GColorWhite);
+    graphics_context_set_fill_color(ctx, foreground_color ? GColorWhite : GColorBlack);
     graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 }
 
@@ -94,10 +107,10 @@ static void battery_callback(BatteryChargeState state){
 static uint16_t normalWeekday(int weekday){
 	switch(weekday){
 		case 0: return RESOURCE_ID_IMAGE_SUNDAY;
-        case 1: text_layer_set_text(s_weekday_layer, "Monday"); break;
-        case 2: text_layer_set_text(s_weekday_layer, "Tuesday"); break;
+        case 1: return RESOURCE_ID_IMAGE_MONDAY;
+        case 2: return RESOURCE_ID_IMAGE_TUESDAY;
 		case 3: return RESOURCE_ID_IMAGE_CAMEL;
-        case 4: text_layer_set_text(s_weekday_layer, "Thursday"); break;
+        case 4: return RESOURCE_ID_IMAGE_THURSDAY;
 		case 5: return RESOURCE_ID_IMAGE_FRIDAY;
         case 6: text_layer_set_text(s_weekday_layer, "Saturday"); break;
 		default: break;		
@@ -118,7 +131,7 @@ static int countChar(char* string, char delim){
 static uint16_t get_background_resource(int month, int day, int weekday){
 
 	// Check for birthdays
-	for(int i = 0; i < 4; i++){
+	for(int i = 0; i < 10; i++){
 		if(birthdays[i].name == NULL)
 			continue;
 
@@ -187,6 +200,9 @@ static void update_time(){
 
     strftime(date_buffer, sizeof("DDD, MMM DD"), "%a, %b %e", tick_time);
 
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Time -> %s", buffer);
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Date -> %s", date_buffer);
+
     text_layer_set_text(s_time_layer, buffer);
     text_layer_set_text(s_date_layer, date_buffer);
 }
@@ -213,13 +229,12 @@ static void update_image(){
     bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
     if(s_background_bitmap == NULL){
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Image Missing: [%i]", RESOURCE_ID);
-        text_layer_set_text(s_weekday_layer, "Booooo, no image");
     }
 
 	if(text_layer_get_text(s_weekday_layer) == NULL)
 		text_layer_set_background_color(s_weekday_layer, GColorClear);
 	else
-		text_layer_set_background_color(s_weekday_layer, GColorBlack);
+		text_layer_set_background_color(s_weekday_layer, background_color ? GColorWhite : GColorBlack);
 }
 
 static void parse_birthday_list(char* list){
@@ -231,7 +246,7 @@ static void parse_birthday_list(char* list){
 			return;
 
 		int index = 0;
-		for(int i = 0; i < listSize && i < 8; i+=2){
+		for(int i = 0; i < listSize && i < 16*2; i+=2){
 			char* src = temp;		
 		
 			// Name
@@ -312,33 +327,48 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed){
 static void window_load(Window *window) {
     Layer *window_layer = window_get_root_layer(window);
 
-    window_set_background_color(window, GColorBlack);
+	// check for color inversion
+	if(persist_exists(KEY_INVERT_COLOR)){
+		is_inverted = persist_read_bool(KEY_INVERT_COLOR);
+		if(is_inverted){
+			background_color = WHITE;
+			foreground_color = BLACK;
+		}else{
+			background_color = BLACK;
+			foreground_color = WHITE;
+		}
+	}
+
+    window_set_background_color(window, background_color ? GColorWhite : GColorBlack);
 
     // Create GBitmap, then set to created BitmapLayer
-    s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_DEFAULT);
+    s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CAMEL);
     s_background_layer = bitmap_layer_create(GRect(0, 0, 144, 88));
     bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
+	bitmap_layer_set_compositing_mode(s_background_layer, GCompOpAssign);
+	if(is_inverted)
+		bitmap_layer_set_compositing_mode(s_background_layer, GCompOpAssignInverted);
     layer_add_child(window_layer, bitmap_layer_get_layer(s_background_layer));
 
     // Create time TextLayer
     s_time_layer = text_layer_create(GRect(0, 85, 144, 50));
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
     text_layer_set_background_color(s_time_layer, GColorClear);
-    text_layer_set_text_color(s_time_layer, GColorWhite);
+    text_layer_set_text_color(s_time_layer, foreground_color ? GColorWhite : GColorBlack);
     text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT));
 
     // Create date TextLayer
-    s_date_layer = text_layer_create(GRect(0, 135, 85, 50));
+    s_date_layer = text_layer_create(GRect(0, 135, 90, 50));
     text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
     text_layer_set_background_color(s_date_layer, GColorClear);
-    text_layer_set_text_color(s_date_layer, GColorWhite);
+    text_layer_set_text_color(s_date_layer, foreground_color ? GColorWhite : GColorBlack);
     text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
 
     // Create weekday TextLayer
     s_weekday_layer = text_layer_create(GRect(2, 52, 140, 20));
     text_layer_set_text_alignment(s_weekday_layer, GTextAlignmentCenter);
     text_layer_set_background_color(s_weekday_layer, GColorBlack);
-    text_layer_set_text_color(s_weekday_layer, GColorWhite);
+    text_layer_set_text_color(s_weekday_layer, foreground_color ? GColorWhite : GColorBlack);
     text_layer_set_font(s_weekday_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
     
     // Create battery layer
@@ -346,18 +376,22 @@ static void window_load(Window *window) {
     layer_set_update_proc(s_battery_layer, battery_update_proc);
     
     // Create divider layer
-    s_divider_layer = layer_create(GRect(85, 141, 1, 24));
+    s_divider_layer = layer_create(GRect(90, 141, 1, 24));
     layer_set_update_proc(s_divider_layer, divider_update_proc);
     
     // Create the Bluetooth layer
     s_bt_icon_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BT_ICON);
     s_bt_icon_layer = bitmap_layer_create(GRect(59, 12, 30, 30));
     bitmap_layer_set_bitmap(s_bt_icon_layer, s_bt_icon_bitmap);
+	bitmap_layer_set_compositing_mode(s_bt_icon_layer, GCompOpAssign);
+	if(is_inverted)
+		bitmap_layer_set_compositing_mode(s_bt_icon_layer, GCompOpAssignInverted);	
+    bluetooth_callback(bluetooth_connection_service_peek());
     
     // Create temperature layer
-    s_weather_layer = text_layer_create(GRect(85, 135, 59, 50));
+    s_weather_layer = text_layer_create(GRect(90, 135, 59, 50));
     text_layer_set_background_color(s_weather_layer, GColorClear);
-    text_layer_set_text_color(s_weather_layer, GColorWhite);
+    text_layer_set_text_color(s_weather_layer, foreground_color ? GColorWhite : GColorBlack);
     text_layer_set_text_alignment(s_weather_layer, GTextAlignmentCenter);
     text_layer_set_font(s_weather_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
 	text_layer_set_text(s_weather_layer, "...");
@@ -371,6 +405,7 @@ static void window_load(Window *window) {
     layer_add_child(window_layer, bitmap_layer_get_layer(s_bt_icon_layer));
     layer_add_child(window_layer, text_layer_get_layer(s_weather_layer));
 
+	/* Check persist items */
 	if(persist_exists(KEY_TWENTY_FOUR_HOUR_FORMAT)){
 		twenty_four_hour_format = persist_read_bool(KEY_TWENTY_FOUR_HOUR_FORMAT);
 		update_time();
@@ -379,7 +414,7 @@ static void window_load(Window *window) {
 
 	if(persist_exists(KEY_BATTERY_ON_OFF)){
 		battery_on_off = persist_read_bool(KEY_BATTERY_ON_OFF);
-		layer_set_hidden(s_battery_layer, !battery_on_off);
+		layer_mark_dirty(s_battery_layer);
 
 		APP_LOG(APP_LOG_LEVEL_DEBUG, "Battery: [%s]", (battery_on_off) ? "On" : "Off");	
 	}
@@ -397,9 +432,7 @@ static void window_load(Window *window) {
 
 	if(persist_exists(KEY_BIRTHDAY_LIST)){
 		persist_read_string(KEY_BIRTHDAY_LIST, birthday_list, birthday_list_size);
-		update_time();
 		parse_birthday_list(birthday_list);
-		printf("Pre-name: %s", birthdays[1].name);
 	}
 }
 
@@ -432,13 +465,13 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 break;			
 			case KEY_TWENTY_FOUR_HOUR_FORMAT:
 				twenty_four_hour_format = (bool)t->value->int8;
-				persist_write_int(KEY_TWENTY_FOUR_HOUR_FORMAT, twenty_four_hour_format);
+				persist_write_bool(KEY_TWENTY_FOUR_HOUR_FORMAT, twenty_four_hour_format);
 				update_time();
 				break;
 			case KEY_BATTERY_ON_OFF:
 				battery_on_off = (bool)t->value->int8;
-				persist_write_int(KEY_BATTERY_ON_OFF, battery_on_off);
-				layer_set_hidden(s_battery_layer, !battery_on_off);
+				persist_write_bool(KEY_BATTERY_ON_OFF, battery_on_off);
+				layer_mark_dirty(s_battery_layer);
 				break;
 			case KEY_TEMP_TYPE:
 				strcpy(temperature_format, (char*)t->value);
@@ -453,6 +486,20 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 				parse_birthday_list(birthday_list); 
 				break;
 			}
+			case KEY_INVERT_COLOR:
+				is_inverted = (bool)t->value->int8;
+				if(is_inverted){
+					background_color = WHITE;
+					foreground_color = BLACK;
+				}else{
+					background_color = BLACK;
+					foreground_color = WHITE;
+				}
+				persist_write_bool(KEY_INVERT_COLOR, is_inverted);
+				window_unload(window);
+				window_load(window);
+				update_image();
+				break;
             default:
                 APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key);
                 break;

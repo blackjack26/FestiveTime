@@ -4,7 +4,8 @@
 		"twentyFourHourFormat": 1,
 		"batteryDisplayOnOff": 2,
 		"temperatureFormat": 3,
-		"birthdayList": 4
+		"birthdayList": 4,
+		"invertColor": 5
     },
     "capabilities": [
         "location",
@@ -32,11 +33,6 @@
                 "type": "pbi"
             },
             {
-                "file": "images/festive-time.png",
-                "name": "IMAGE_DONT_USE",
-                "type": "png"
-            },
-            {
                 "file": "images/Easter.png",
                 "name": "IMAGE_RABBIT",
                 "type": "pbi"
@@ -57,11 +53,6 @@
                 "type": "pbi"
             },
             {
-                "file": "images/normal.png",
-                "name": "IMAGE_DEFAULT",
-                "type": "pbi"
-            },
-            {
                 "file": "images/10-31.png",
                 "name": "IMAGE_10_31",
                 "type": "pbi"
@@ -74,6 +65,21 @@
             {
                 "file": "images/camel.png",
                 "name": "IMAGE_CAMEL",
+                "type": "pbi"
+            },
+			{
+                "file": "images/Monday.png",
+                "name": "IMAGE_MONDAY",
+                "type": "pbi"
+            },
+			{
+                "file": "images/Tuesday.png",
+                "name": "IMAGE_TUESDAY",
+                "type": "pbi"
+            },
+			{
+                "file": "images/Thursday.png",
+                "name": "IMAGE_THURSDAY",
                 "type": "pbi"
             }
         ]
