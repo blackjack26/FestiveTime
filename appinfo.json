@@ -81,6 +81,11 @@
                 "file": "images/Thursday.png",
                 "name": "IMAGE_THURSDAY",
                 "type": "pbi"
+            },
+			{
+                "file": "images/Saturday.png",
+                "name": "IMAGE_SATURDAY",
+                "type": "pbi"
             }
         ]
     },
