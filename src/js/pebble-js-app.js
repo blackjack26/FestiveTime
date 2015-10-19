@@ -7,10 +7,19 @@ var xhrRequest = function (url, type, callback) {
   xhr.send();
 };
 
+var cityLocation = "";
+
 function locationSuccess(pos) {
   // Construct URL
-  var url = "http://api.openweathermap.org/data/2.5/weather?lat=" +
-      pos.coords.latitude + "&lon=" + pos.coords.longitude + "&APPID=8c467bea8bafbdf81de33ba4aba6cabb";
+  var url = "";
+  if(cityLocation === ""){
+	  url = "http://api.openweathermap.org/data/2.5/weather?lat=" +
+     	 pos.coords.latitude + "&lon=" + pos.coords.longitude + "&APPID=8c467bea8bafbdf81de33ba4aba6cabb";
+  }else{
+	  url =	"http://api.openweathermap.org/data/2.5/weather?q=" + cityLocation + "&APPID=8c467bea8bafbdf81de33ba4aba6cabb";
+  }
+
+  
 
   // Send request to OpenWeatherMap
   xhrRequest(url, 'GET', 
@@ -46,18 +55,22 @@ function locationError(err) {
 }
 
 function getWeather() {
-  navigator.geolocation.getCurrentPosition(
-    locationSuccess,
-    locationError,
-    {timeout: 15000, maximumAge: 60000}
-  );
+  if(cityLocation === ""){
+	  navigator.geolocation.getCurrentPosition(
+		locationSuccess,
+		locationError,
+		{timeout: 15000, maximumAge: 60000}
+	  );
+  } else {
+  	  locationSuccess(cityLocation);
+  }
 }
 
 // Listen for when the watchface is opened
 Pebble.addEventListener('ready', 
   function(e) {
     console.log("PebbleKit JS ready!");
-
+	cityLocation = localStorage.getItem(100);
     // Get the initial weather
     getWeather();
   }
@@ -80,6 +93,12 @@ Pebble.addEventListener('showConfiguration', function(){
 Pebble.addEventListener('webviewclosed', function(e) {
 	var configData = JSON.parse(decodeURIComponent(e.response));
 	console.log('Configuration page returned: ' + JSON.stringify(configData));
+
+	localStorage.setItem(100, configData.location);
+	if(configData.useLocation)
+		localStorage.setItem(100, "");
+	cityLocation = localStorage.getItem(100);
+	getWeather();
 
 	if(configData.temperatureFormat){
 		Pebble.sendAppMessage({
