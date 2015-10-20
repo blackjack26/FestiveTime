@@ -129,7 +129,7 @@ static int countChar(char* string, char delim){
 
 /** Get background resource for special days **/
 static uint16_t get_background_resource(int month, int day, int weekday){
-
+	text_layer_set_text(s_weekday_layer, NULL);
 	// Check for birthdays
 	for(int i = 0; i < 10; i++){
 		if(birthdays[i].name == NULL)
@@ -153,24 +153,89 @@ static uint16_t get_background_resource(int month, int day, int weekday){
 	}
 
     switch(month){
+		case 1:
+			switch(day){
+				case 1: 
+	        		text_layer_set_text(s_weekday_layer, "Happy New Year!");
+					return RESOURCE_ID_IMAGE_NEW_YEARS;
+			}
+		case 2:
+			switch(day){
+				case 14: 
+	        		text_layer_set_text(s_weekday_layer, "Valentine's Day!");
+					return RESOURCE_ID_IMAGE_VALENTINE;
+			}
+		case 3:
+			switch(day){
+				case 17: 
+	        		text_layer_set_text(s_weekday_layer, "St. Patrick's Day!");
+					return RESOURCE_ID_IMAGE_ST_PATRICK;
+				case 20:
+				case 21: 
+	        		text_layer_set_text(s_weekday_layer, "Happy Spring!");
+					return RESOURCE_ID_IMAGE_SPRING;
+			}
         case 4:
-            return RESOURCE_ID_IMAGE_RABBIT;
+            switch(day){
+				case 1: 
+	        		text_layer_set_text(s_weekday_layer, "April Fools!");
+					return RESOURCE_ID_IMAGE_APRIL_FOOLS;
+				default: return RESOURCE_ID_IMAGE_RABBIT;
+			}
+		case 5:
+			switch(day){
+				case 5: 
+	        		text_layer_set_text(s_weekday_layer, "Happy Cinco de Mayo!");
+					return RESOURCE_ID_IMAGE_CINCO_DE_MAYO;
+			}
+		case 6:
+			switch(day){
+				case 22:
+				case 23: 
+	        		text_layer_set_text(s_weekday_layer, "Happy Summer!");
+					return RESOURCE_ID_IMAGE_SUMMER;
+			}
+		case 7:
+			switch(day){
+				case 4: 
+	        		text_layer_set_text(s_weekday_layer, "Happy 4th of July!");
+					return RESOURCE_ID_IMAGE_FOURTH_OF_JULY;
+			}
+		case 9:
+			switch(day){
+				case 22:
+				case 23: 
+	        		text_layer_set_text(s_weekday_layer, "Happy Fall!");
+					return RESOURCE_ID_IMAGE_FALL;
+			}
         case 10:
             switch(day){
+				case 25:
+				case 26:
+				case 27:
+				case 28:
                 case 29:
                 case 30:
-                case 31: return RESOURCE_ID_IMAGE_10_31;
+	        		text_layer_set_text(s_weekday_layer, NULL);
+					return RESOURCE_ID_IMAGE_10_31;
+                case 31: 
+	        		text_layer_set_text(s_weekday_layer, "Happy Halloween!");
+					return RESOURCE_ID_IMAGE_10_31;
                 default: return normalWeekday(weekday);
             }
         case 11:
             return RESOURCE_ID_IMAGE_TURKEY;
         case 12:
             switch(day){
-                case 20:
-                case 21:
-                case 22:
+                case 21: 
+                case 22: 
+	        		text_layer_set_text(s_weekday_layer, "Happy Winter!");
+					return RESOURCE_ID_IMAGE_WINTER;
                 case 23:
-                case 25: return RESOURCE_ID_IMAGE_12_25;
+				case 24:
+                case 25: 
+	        		text_layer_set_text(s_weekday_layer, "Merry Christmas!");
+					return RESOURCE_ID_IMAGE_12_25;
                 default: return normalWeekday(weekday);
             }
         default:

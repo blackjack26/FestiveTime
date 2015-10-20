@@ -86,6 +86,56 @@
                 "file": "images/Saturday.png",
                 "name": "IMAGE_SATURDAY",
                 "type": "pbi"
+            },
+			{
+                "file": "images/newYears.png",
+                "name": "IMAGE_NEW_YEARS",
+                "type": "pbi"
+            },
+			{
+                "file": "images/Fall.png",
+                "name": "IMAGE_FALL",
+                "type": "pbi"
+            },
+			{
+                "file": "images/Spring.png",
+                "name": "IMAGE_SPRING",
+                "type": "pbi"
+            },
+			{
+                "file": "images/Winter.png",
+                "name": "IMAGE_WINTER",
+                "type": "pbi"
+            },
+			{
+                "file": "images/Summer.png",
+                "name": "IMAGE_SUMMER",
+                "type": "pbi"
+            },
+			{
+                "file": "images/aprilFools.png",
+                "name": "IMAGE_APRIL_FOOLS",
+                "type": "pbi"
+            },
+			{
+                "file": "images/stPatricks.png",
+                "name": "IMAGE_ST_PATRICK",
+                "type": "pbi"
+            },
+			{
+                "file": "images/Valentine.png",
+                "name": "IMAGE_VALENTINE",
+                "type": "pbi"
+            },
+			{
+                "file": "images/May5.png",
+                "name": "IMAGE_CINCO_DE_MAYO",
+                "type": "pbi"
+            },
+			{
+                "file": "images/July4.png",
+                "name": "IMAGE_FOURTH_OF_JULY",
+                "type": "pbi"
             }
         ]
     },
