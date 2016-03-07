@@ -103,6 +103,21 @@ static void battery_callback(BatteryChargeState state){
     layer_mark_dirty(s_battery_layer);
 }
 
+static uint16_t thursdayThoughts(){
+    int n = rand() % 2 + 1; // [1,2]
+
+    char* thoughtStr = "";
+
+    switch(n){
+        case 1: strcpy(thoughtStr, "Live what you love"); break;
+        case 2: strcpy(thoughtStr, "You get what you settle for"); break;
+        default: strcpy(thoughtStr, "Thursday Thoughts"); break;
+    }
+    
+    text_layer_set_text(s_weekday_layer, thoughtStr);
+    return 0;
+}
+
 /** Get resource for normal weekdays **/
 static uint16_t normalWeekday(int weekday){
 	switch(weekday){
@@ -110,7 +125,7 @@ static uint16_t normalWeekday(int weekday){
         case 1: return RESOURCE_ID_IMAGE_MONDAY;
         case 2: return RESOURCE_ID_IMAGE_TUESDAY;
 		case 3: return RESOURCE_ID_IMAGE_CAMEL;
-        case 4: return RESOURCE_ID_IMAGE_THURSDAY;
+        case 4: thursdayThoughts(); return 0;
 		case 5: return RESOURCE_ID_IMAGE_FRIDAY;
         case 6: return RESOURCE_ID_IMAGE_SATURDAY;
 		default: break;		
@@ -158,12 +173,14 @@ static uint16_t get_background_resource(int month, int day, int weekday){
 				case 1: 
 	        		text_layer_set_text(s_weekday_layer, "Happy New Year!");
 					return RESOURCE_ID_IMAGE_NEW_YEARS;
+                default: return normalWeekday(weekday);
 			}
 		case 2:
 			switch(day){
 				case 14: 
 	        		text_layer_set_text(s_weekday_layer, "Valentine's Day!");
 					return RESOURCE_ID_IMAGE_VALENTINE;
+                default: return normalWeekday(weekday);
 			}
 		case 3:
 			switch(day){
@@ -174,6 +191,7 @@ static uint16_t get_background_resource(int month, int day, int weekday){
 				case 21: 
 	        		text_layer_set_text(s_weekday_layer, "Happy Spring!");
 					return RESOURCE_ID_IMAGE_SPRING;
+                default: return normalWeekday(weekday);
 			}
         case 4:
             switch(day){
@@ -187,6 +205,7 @@ static uint16_t get_background_resource(int month, int day, int weekday){
 				case 5: 
 	        		text_layer_set_text(s_weekday_layer, "Happy Cinco de Mayo!");
 					return RESOURCE_ID_IMAGE_CINCO_DE_MAYO;
+                default: return normalWeekday(weekday);
 			}
 		case 6:
 			switch(day){
@@ -194,12 +213,14 @@ static uint16_t get_background_resource(int month, int day, int weekday){
 				case 23: 
 	        		text_layer_set_text(s_weekday_layer, "Happy Summer!");
 					return RESOURCE_ID_IMAGE_SUMMER;
+                default: return normalWeekday(weekday);
 			}
 		case 7:
 			switch(day){
 				case 4: 
 	        		text_layer_set_text(s_weekday_layer, "Happy 4th of July!");
 					return RESOURCE_ID_IMAGE_FOURTH_OF_JULY;
+                default: return normalWeekday(weekday);
 			}
 		case 9:
 			switch(day){
@@ -207,6 +228,7 @@ static uint16_t get_background_resource(int month, int day, int weekday){
 				case 23: 
 	        		text_layer_set_text(s_weekday_layer, "Happy Fall!");
 					return RESOURCE_ID_IMAGE_FALL;
+                default: return normalWeekday(weekday);                   
 			}
         case 10:
             switch(day){
@@ -226,15 +248,24 @@ static uint16_t get_background_resource(int month, int day, int weekday){
         case 11:
             return RESOURCE_ID_IMAGE_TURKEY;
         case 12:
-            switch(day){
-                case 21: 
+            switch(day){     
                 case 22: 
 	        		text_layer_set_text(s_weekday_layer, "Happy Winter!");
-					return RESOURCE_ID_IMAGE_WINTER;
-                case 23:
-				case 24:
+		    	case 18:
+                case 19:
+                case 20:
+                case 21:
+                    return RESOURCE_ID_IMAGE_WINTER;
                 case 25: 
 	        		text_layer_set_text(s_weekday_layer, "Merry Christmas!");
+                case 23:
+				case 24:
+                case 26:
+                case 27:
+                case 28:
+                case 29:
+                case 30:
+                case 31:
 					return RESOURCE_ID_IMAGE_12_25;
                 default: return normalWeekday(weekday);
             }
